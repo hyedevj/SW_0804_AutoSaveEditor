@@ -1,6 +1,7 @@
 import { request } from "./api.js"
 import Editor from "./Editor.js"
 import { getItem, setItem } from "./storage.js"
+import LinkButton from "./LinkButton.js"
 
 export default function PostEditPage({ $target, initialState }) {
 	const $page = document.createElement("div")
@@ -31,25 +32,42 @@ export default function PostEditPage({ $target, initialState }) {
                 
                 const isNew = this.state.postId === 'new'
                 if (isNew) {
-                    const createdPost = await request('/posts/', {
+                    const createdPost = await request('/posts', {
                         method: 'POST',
-                        body: JSON.stringify(this.state)
+                        body: JSON.stringify(post)
                     })
                     history.replaceState(null, null, `/posts/${createdPost.id}`)
                     removeItem(postLocalSaveKey)
+
+                    this.setState({
+                        postId: createdPost.id
+                    })
                 } else {
-                    
+                    await request(`/posts/${post.id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(post)
+                    })
+                    removeItem(postLocalSaveKey)
                 }
-			}, 1000)
+			}, 2000)
 		}
     })
 
     this.setState = async nextState => {
         if (this.state.postId !== nextState.postId) {
             postLocalSaveKey = `temp-post-${nextState.postId}`
-
             this.state = nextState
-            await fetchPost()
+
+            if (this.state.postId === 'new') {
+                const post = getItem(postLocalSaveKey, {
+                    title: '',
+                    content: ''
+                })
+                this.render()
+                editor.setState(post)
+            } else {
+                await fetchPost()
+            }
             return
         }
         this.state = nextState
@@ -88,4 +106,12 @@ export default function PostEditPage({ $target, initialState }) {
             this.setState
         }
     }
+
+    new LinkButton({
+        $target: $page,
+        initialState: {
+            text: '목록으로 이동',
+            link: '/'
+        }
+    })
 }

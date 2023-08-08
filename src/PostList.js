@@ -1,4 +1,6 @@
-export default function PostList({ $target, initialState, onPostClick }) {
+import { push } from "./router.js"
+
+export default function PostList({ $target, initialState }) {
   const $postList = document.createElement('div')
   $target.appendChild($postList)
 
@@ -19,4 +21,13 @@ export default function PostList({ $target, initialState, onPostClick }) {
     `
   }
   this.render()
+
+  $postList.addEventListener('click', (e) => {
+    const $li = e.target.closest('li')
+
+    if ($li) {
+      const { id } = $li.dataset
+      push(`/posts/${id}`)
+    }
+  })
 }
